@@ -103,6 +103,7 @@ describe('Siskel', function() {
     });
 
     it('should re-render when the collection sorts', function() {
+      debugger; 
       collection.sort();
       expect(collectionView.render).to.have.been.called;
     });

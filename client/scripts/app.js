@@ -5,7 +5,7 @@ var Movie = Backbone.Model.extend({
   },
 
   toggleLike: function() {
-    // your code here
+    this.set('like', !this.get('like'));
   }
 
 });
@@ -15,41 +15,24 @@ var Movies = Backbone.Collection.extend({
   model: Movie,
 
   initialize: function() {
-    // your code here
+    this.on('change', function() {      
+      this.sort();
+    });
   },
 
   comparator: 'title',
 
   sortByField: function(field) {
-    // your code here
+    this.comparator = field;
+    this.sort();
   }
 
 });
-
-var AppView = Backbone.View.extend({
-
-  events: {
-    'click form input': 'handleClick'
-  },
-
-  handleClick: function(e) {
-    var field = $(e.target).val();
-    this.collection.sortByField(field);
-  },
-
-  render: function() {
-    new MoviesView({
-      el: this.$('#movies'),
-      collection: this.collection
-    }).render();
-  }
-
-});
-
+// Responsible for the HTML display of the data and click events
 var MovieView = Backbone.View.extend({
-
+  
   template: _.template('<div class="movie"> \
-                          <div class="like"> \
+  <div class="like"> \
                             <button><img src="images/<%- like ? \'up\' : \'down\' %>.jpg"></button> \
                           </div> \
                           <span class="title"><%- title %></span> \
@@ -58,15 +41,16 @@ var MovieView = Backbone.View.extend({
                         </div>'),
 
   initialize: function() {
-    // your code here
+    this.render();
+    this.model.on('change:like', this.render, this);
   },
 
   events: {
     'click button': 'handleClick'
   },
 
-  handleClick: function() {
-    // your code here
+  handleClick: function(e) {
+    this.model.toggleLike();
   },
 
   render: function() {
@@ -77,9 +61,11 @@ var MovieView = Backbone.View.extend({
 });
 
 var MoviesView = Backbone.View.extend({
-
+  // in a view that references a collection, don't forget to pass in the this binding to make sure 
   initialize: function() {
-    // your code here
+    this.collection.on('sort', function() {
+      this.render();
+    }, this);
   },
 
   render: function() {
@@ -93,3 +79,24 @@ var MoviesView = Backbone.View.extend({
   }
 
 });
+// gets passed a collection of movies, which it passes to moviesView to render
+var AppView = Backbone.View.extend({
+
+  events: {
+    'click form input': 'handleClick'
+  },
+
+  handleClick: function (e) {
+    var field = $(e.target).val();
+    this.collection.sortByField(field);
+  },
+
+  render: function () {
+    new MoviesView({
+      el: this.$('#movies'),
+      collection: this.collection
+    }).render();
+  }
+
+});
+  
